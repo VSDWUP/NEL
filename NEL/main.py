@@ -19,7 +19,7 @@ file_path = "../files/2.txt"
 result = process(file_path, tags_list)
 # print(result)
 
-for i in result:
-    print(i)
+# for i in result:
+#     print(i)
 # result_set = process(file,tags_list)
 # print(len(result_set))

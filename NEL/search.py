@@ -46,10 +46,10 @@ def getPEREntitySearchResult(query):
                 getEntitiesAliases(filtered_entities_dict)
                 entities_weight_dict = setWeightsForPEREntities(filtered_entities_dict, query)
                 result_entity = findFirstDictMaxPriorityEntity(entities_weight_dict)
-                return (result_entity, createWikiDataLink(result_entity))
+                return result_entity, createWikiDataLink(result_entity)
             else:
                 result_entity = tuple(filtered_entities_dict.keys())[0]
-                return (result_entity, createWikiDataLink(result_entity))
+                return result_entity, createWikiDataLink(result_entity)
         else:
             return none_result
 
@@ -70,10 +70,10 @@ def getLOCEntitySearchResult(query):
                 entities_instance_of_dict = getEntitiesInstanceOfDict(filtered_entities_dict)
                 setWeightsForLOCEntities(entities_instance_of_dict, filtered_entities_dict)
                 result_entity = findFirstDictMaxPriorityEntity(filtered_entities_dict)
-                return (result_entity, createWikiDataLink(result_entity))
+                return result_entity, createWikiDataLink(result_entity)
             else:
                 result_entity = tuple(filtered_entities_dict.keys())[0]
-                return (result_entity, createWikiDataLink(result_entity))
+                return result_entity, createWikiDataLink(result_entity)
         else:
             return none_result
     else:
@@ -126,8 +126,9 @@ def filterPEREntitiesSearchResult(search_entity_list):
     filtered_entities_dict = {}
     for entity in search_entity_list:
         claim = getEntityClaim(entity)
-        filterPerEntity(claim,filtered_entities_dict,entity)
+        filterPerEntity(claim, filtered_entities_dict, entity)
     return filtered_entities_dict
+
 
 def filterPerEntity(entity_claim, filtered_entities_dict, entity):
     if 'P31' in entity_claim:
@@ -144,12 +145,14 @@ def filterPerEntity(entity_claim, filtered_entities_dict, entity):
                     filtered_entities_dict[entity] = []
                     return
 
+
 def getEntityLabel(entity_id):
     search_url = "https://www.wikidata.org/wiki/Special:EntityData/{}.json".format(entity_id)
     response = requests.get(search_url)
     data = response.json()
     label = data['entities'][entity_id]['labels']['en']['value']
     return label
+
 
 def getLabelLastWord(label):
     return label.split(" ")[-1]
@@ -254,6 +257,7 @@ def setWeightsForLOCEntities(instance_of_dict, filtered_entities_dict):
             if k in iterateList:
                 filtered_entities_dict[i] = loc_entities_id_weight_dict[k]
                 break
+
 
 def cleanAlias(alias):
     clean_alias = ""

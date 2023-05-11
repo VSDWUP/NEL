@@ -9,8 +9,7 @@ def extractNamedEntities(sentence_list, ner_model_name, tags_list):
     tags = tags_list
     model = build_model(ner_model_name)
     named_entities_set = findTextNamedEntities(sentence_list, tags, model)
-    corrected_entities_set = tokenCorrection(named_entities_set)
-    full_entity_set = addEntitiesLemmas(corrected_entities_set)
+    full_entity_set = makeFullEntitySet(named_entities_set)
     return full_entity_set
 
 
@@ -79,23 +78,19 @@ def lemmatizeEntity(named_entity):
     return lemmatized_entity
 
 
-def tokenCorrection(named_entities_set):
-    new_set = set()
-    for element in named_entities_set:
-        new_set.add((element[0].replace(" .", ".").lower(), element[1]))
-    return new_set
-
+def entityCorrection(named_entitity):
+    return named_entitity.replace(" .", ".").lower()
 
 def clearNERTag(tag):
     return tag.split("-")[1]
 
 
-def addEntitiesLemmas(entities_set):
+def makeFullEntitySet(entities_set):
     new_entities_set = set()
-    for entity_info in entities_set:
-        entity_tuple = entity_info
-        entity_lemma = lemmatizeEntity(entity_tuple[0]).strip()
-        new_entity_tuple = (entity_tuple[0], entity_tuple[1], entity_lemma)
+    for entity_tuple in entities_set:
+        corrected_entity = entityCorrection(entity_tuple[0])
+        entity_lemma = lemmatizeEntity(corrected_entity).strip()
+        new_entity_tuple = (corrected_entity, entity_tuple[1], entity_lemma)
         new_entities_set.add(new_entity_tuple)
 
     return new_entities_set
