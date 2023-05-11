@@ -82,7 +82,7 @@ def lemmatizeEntity(named_entity):
 def tokenCorrection(named_entities_set):
     new_set = set()
     for element in named_entities_set:
-        new_set.add((element[0].replace(" .", ".").lower(),element[1]))
+        new_set.add((element[0].replace(" .", ".").lower(), element[1]))
     return new_set
 
 
@@ -93,23 +93,9 @@ def clearNERTag(tag):
 def addEntitiesLemmas(entities_set):
     new_entities_set = set()
     for entity_info in entities_set:
-        entity_tuple = (entity_info)
+        entity_tuple = entity_info
         entity_lemma = lemmatizeEntity(entity_tuple[0]).strip()
-        new_entity_tuple = (entity_tuple[0],entity_tuple[1],entity_lemma)
+        new_entity_tuple = (entity_tuple[0], entity_tuple[1], entity_lemma)
         new_entities_set.add(new_entity_tuple)
 
     return new_entities_set
-
-
-# sentence_list = ['Россия и Соединенные Штаты Америки обсудили Петербург в Лондоне.', 'Александр Сергеевич Пушкин приехал в Москву.', 'Петербург ранее был столицей Российской империи.']
-# tokens_offsets
-# ner_model = build_model("ner_rus_bert")
-# full_len = 0
-# result_set = set()
-# for i in range(len(sentence_list)):
-#     sentence_result = ner_model([sentence_list[i]])
-#     print(sentence_result[2][0])
-#     last_index = sentence_result[2][0][-1][1]
-#     full_len += last_index
-#     for k in sentence_result:
-#         findSentenceNamedEntities(sentence_result,["PER","LOC"],["B-PER","B-LOC"],["I-PER","I-LOC"],result_set)

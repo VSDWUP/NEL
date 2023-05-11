@@ -1,8 +1,10 @@
 from sqlalchemy import create_engine
-from configs.DBConfig import host, user, password, db_name, tablename
+from configs.DBConfig import host, user, password, db_name, named_entities_table, texts_table, text_named_entities_table
 from sqlalchemy.orm import DeclarativeBase, Session
 from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import VARCHAR, TEXT, BIGINT
+from psycopg2.errors import UniqueViolation
+from sqlalchemy.exc import IntegrityError
 
 engine = create_engine(f"postgresql://{user}:{password}@{host}/{db_name}")
 
@@ -12,53 +14,120 @@ class Base(DeclarativeBase):
 
 
 class NamedEntity(Base):
-    __tablename__ = tablename
+    __tablename__ = named_entities_table
 
     id = Column(BIGINT, autoincrement=True, primary_key=True)
     entity = Column(VARCHAR(250), nullable=False)
     tag = Column(VARCHAR(25), nullable=False)
-    text_name = Column(VARCHAR(250))
-    link = Column(TEXT)
     concept_id = Column(VARCHAR(50))
+    link = Column(TEXT)
 
 
-def insertEntities(entity_list, file_path):
-    for entity_info_list in entity_list:
-        insertEntity(entity_info_list[0], entity_info_list[1],getFileNameFromPath(file_path),
-                     entity_info_list[2], entity_info_list[3])
+class Text(Base):
+    __tablename__ = texts_table
+
+    id = Column(BIGINT, autoincrement=True, primary_key=True)
+    title = Column(VARCHAR(250), nullable=False)
+    corpus = Column(VARCHAR(250), nullable=False)
 
 
-def insertEntity(entity, tag, text_name, concept_id, link):
+class TextEntityLink(Base):
+    __tablename__ = text_named_entities_table
+
+    text_id = Column(BIGINT, primary_key=True)
+    named_entity_id = Column(BIGINT, primary_key=True)
+
+
+def upsertMethodResult(entity_set, file_path):
+    text_id = upsertTextEntity(file_path)
+    entity_id_list = upsertNamedEntities(entity_set)
+    upsertEntityTextLinks(entity_id_list, text_id)
+
+
+def upsertTextEntity(file_path):
+    file_info = getFileInfo(file_path)
+    title = file_info[0]
+    corpus = file_info[1]
     with Session(autoflush=False, bind=engine) as db:
-        search_result = db.query(NamedEntity).filter(NamedEntity.entity == entity, NamedEntity.tag == tag,
-                                                     NamedEntity.text_name == text_name).first()
-        if search_result is None:
-            newRecord = NamedEntity(entity=entity, tag=tag, text_name=text_name, concept_id=concept_id, link=link)
+        text_id = db.query(Text).filter(Text.title == title, Text.corpus == corpus).first()
+        if text_id is None:
+            db.add(Text(title=title, corpus=corpus))
+            db.commit()
+            text_id = db.query(Text).filter(Text.title == title, Text.corpus == corpus).first()
+    db.close()
+    return text_id.id
+
+
+def getFileInfo(file_path):
+    splitted_file_path = file_path.split("/")
+    file_name = splitted_file_path[-1].split(".")[-2]
+    corpus = splitted_file_path[-2]
+    return [file_name, corpus]
+
+
+def upsertNamedEntities(entities_info_set):
+    for entity in entities_info_set:
+        upsertEntity(entity=entity[0], tag=entity[1], link=entity[2], concept_id=entity[3])
+
+    entity_id_list = []
+    with Session(autoflush=False, bind=engine) as db:
+        for entity in entities_info_set:
+            query_result = db.query(NamedEntity).filter(NamedEntity.entity == entity[0],
+                                                        NamedEntity.tag == entity[1]).first()
+            if query_result is None:
+                pass
+            else:
+                entity_id_list.append(query_result.id)
+    db.close()
+
+    return entity_id_list
+
+
+def upsertEntity(entity, tag, concept_id, link):
+    with Session(autoflush=False, bind=engine) as db:
+        query_result = db.query(NamedEntity).filter(NamedEntity.entity == entity, NamedEntity.tag == tag, ).first()
+        if query_result is None:
+            newRecord = NamedEntity(entity=entity, tag=tag, concept_id=concept_id, link=link)
             db.add(newRecord)
         else:
-            search_result.concept_id = concept_id
-            search_result.link = link
+            query_result.concept_id = concept_id
+            query_result.link = link
         db.commit()
+    db.close()
 
 
-def getFileNameFromPath(file_path):
-    return file_path.split("/")[-1]
-
-
-def getEntityFromDB(entity, tag, text_name):
+def upsertEntityTextLinks(entity_id_list, file_id):
     with Session(autoflush=False, bind=engine) as db:
-        entity_object = db.query(NamedEntity).filter(NamedEntity.entity == entity, NamedEntity.tag == tag,
-                                                     NamedEntity.text_name == text_name).first()
-        return entity_object
+        for entity_id in entity_id_list:
+            db.add(TextEntityLink(named_entity_id=entity_id, text_id=file_id))
+            try:
+                db.commit()
+            except IntegrityError as e:
+                if isinstance(e.orig, UniqueViolation):
+                    db.rollback()
+                    pass
+                else:
+                    raise e
+    db.close()
 
 
-def getNamedEntity(entity, tag, text_name):
-    db_record = getEntityFromDB(entity, tag, text_name)
-    if not isinstance(db_record, NamedEntity):
-        print("Not found")
-    else:
-        print(
-            f"{db_record.id}, {db_record.entity}, {db_record.tag}, {db_record.text_name}, "
-            f"{db_record.link}, {db_record.concept_id}")
+def getNamedEntityFromDB(entity, tag):
+    with Session(autoflush=False, bind=engine) as db:
+        named_entity = db.query(NamedEntity).filter(NamedEntity.entity == entity, NamedEntity.tag == tag).first()
+        if not isinstance(named_entity, NamedEntity):
+            print("Not found")
+        else:
+            print(
+                f"{named_entity.id}, {named_entity.entity}, {named_entity.tag}, {named_entity.link},"
+                f" {named_entity.concept_id}")
+    db.close()
 
 
+def getTextFromDB(text_name, text_corpus):
+    with Session(autoflush=False, bind=engine) as db:
+        text = db.query(Text).filter(Text.title == text_name, Text.corpus == text_corpus).first()
+        if not isinstance(text, Text):
+            print("Not found")
+        else:
+            print(f"{text.id}, {text.title}, {text.corpus}")
+    db.close()

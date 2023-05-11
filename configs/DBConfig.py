@@ -3,4 +3,6 @@ user = "postgres"
 password = "root"
 db_name = "NamedEntities"
 port = 5432
-tablename = "named_entities"
+named_entities_table = "named_entities"
+texts_table = "texts"
+text_named_entities_table = "text_named_entities"

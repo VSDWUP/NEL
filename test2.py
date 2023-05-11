@@ -48,12 +48,27 @@
 #
 # c = a + b + " "
 # print(c)
+# import hashlib
+# loc_entities_id_weight_dict = {"Q7930989": 12, "Q515": 12, "Q6256": 12, "Q2418896": 10,
+#                       "Q12284": 9, "Q165": 8, "Q23397": 7, "Q46831": 6,
+#                       "Q9430": 5, "Q4022": 4, "Q23442": 3, "Q37901": 2, "Q5107": 1}
+#
+#
+# salt = "my_salt"
+# for i in range(10):
+#     hashed_set = hashlib.sha256(str(sorted(result)).encode('utf-8') + salt.encode('utf-8')).hexdigest()
+#     print(hashed_set)
+
+tuple = ("fdsfds","fdgds","fgdgdf")
+set = set()
+set.add(tuple)
+for i in set:
+    print(i[0])
 
 
-set1 = {('лондоне', 'LOC'), ('петербург', 'LOC'), ('соединенные штаты америки', 'LOC'), ('россия', 'LOC')}
-for element in set1:
-    element_list = list(element)
-    element_list.append("Q")
-    print(element_list)
+# for element in set1:
+#     element_list = list(element)
+#     element_list.append("Q")
+#     print(element_list)
 
 # print(set1)

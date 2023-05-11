@@ -1,26 +1,26 @@
 import requests
 from thefuzz import fuzz
-from configs.search_config import loc_entities_id_weight_dict, per_filter_labels
+from configs.search_config import loc_entities_id_weight_dict, per_filter_labels, entity_alias_ratio
 import string
 
 
 def getNamedEntitiesLinks(named_entities_list):
-    entities_info_list = []
+    entities_info_list = set()
     for entity_element in named_entities_list:
 
         lemmatized_entity = entity_element[2]
         entity_tag = entity_element[1]
-        entity_initial_info_list = [lemmatized_entity, entity_tag]
-        entity_search_result = [None, None]
+        entity_initial_info_list = (lemmatized_entity, entity_tag)
+        entity_search_result = (None, None)
 
         if entity_tag == "PER":
             entity_search_result = getPEREntitySearchResult(lemmatized_entity)
         elif entity_tag == "LOC":
             entity_search_result = getLOCEntitySearchResult(lemmatized_entity)
 
-        if entity_search_result == [None, None]:
+        if entity_search_result == (None, None):
             raw_entity = entity_element[0]
-            entity_initial_info_list = [raw_entity, entity_tag]
+            entity_initial_info_list = (raw_entity, entity_tag)
 
             if entity_tag == "PER":
                 entity_search_result = getPEREntitySearchResult(raw_entity)
@@ -28,28 +28,13 @@ def getNamedEntitiesLinks(named_entities_list):
                 entity_search_result = getLOCEntitySearchResult(raw_entity)
 
         entity_full_info_list = entity_initial_info_list + entity_search_result
-        entities_info_list.append(entity_full_info_list)
-
-    # for entity_result in entities_info_list:
-    #     if entity_result[2] is None:
-    #
-    #         lemmatized_entity = entity_result[4]
-    #         entity_tag = entity_result[1]
-    #         entity_rep_search_result = [None, None]
-    #
-    #         if entity_tag == "PER":
-    #             entity_rep_search_result = getPEREntitySearchResult(lemmatized_entity)
-    #         elif entity_tag == "LOC":
-    #             entity_rep_search_result = getLOCEntitySearchResult(lemmatized_entity)
-    #
-    #         entity_result[2] = entity_rep_search_result[0]
-    #         entity_result[3] = entity_rep_search_result[1]
+        entities_info_list.add(entity_full_info_list)
 
     return entities_info_list
 
 
 def getPEREntitySearchResult(query):
-    none_result = [None, None]
+    none_result = (None, None)
     search_entities_list = getEntitiesIdsFromSearchResult(query)
 
     if len(search_entities_list) > 0:
@@ -61,10 +46,10 @@ def getPEREntitySearchResult(query):
                 getEntitiesAliases(filtered_entities_dict)
                 entities_weight_dict = setWeightsForPEREntities(filtered_entities_dict, query)
                 result_entity = findFirstDictMaxPriorityEntity(entities_weight_dict)
-                return [result_entity, createWikiDataLink(result_entity)]
+                return (result_entity, createWikiDataLink(result_entity))
             else:
-                result_entity = list(filtered_entities_dict.keys())[0]
-                return [result_entity, createWikiDataLink(result_entity)]
+                result_entity = tuple(filtered_entities_dict.keys())[0]
+                return (result_entity, createWikiDataLink(result_entity))
         else:
             return none_result
 
@@ -73,7 +58,7 @@ def getPEREntitySearchResult(query):
 
 
 def getLOCEntitySearchResult(query):
-    none_result = [None, None]
+    none_result = (None, None)
     search_entities_list = getEntitiesIdsFromSearchResult(query)
 
     if len(search_entities_list) > 0:
@@ -85,10 +70,10 @@ def getLOCEntitySearchResult(query):
                 entities_instance_of_dict = getEntitiesInstanceOfDict(filtered_entities_dict)
                 setWeightsForLOCEntities(entities_instance_of_dict, filtered_entities_dict)
                 result_entity = findFirstDictMaxPriorityEntity(filtered_entities_dict)
-                return [result_entity, createWikiDataLink(result_entity)]
+                return (result_entity, createWikiDataLink(result_entity))
             else:
-                result_entity = list(filtered_entities_dict.keys())[0]
-                return [result_entity, createWikiDataLink(result_entity)]
+                result_entity = tuple(filtered_entities_dict.keys())[0]
+                return (result_entity, createWikiDataLink(result_entity))
         else:
             return none_result
     else:
@@ -215,7 +200,7 @@ def setWeightsForPEREntities(entities_aliases_dict, query):
 
 def calculateRatio(query, entity):
     fuzzy_ratio = fuzz.token_set_ratio(query, entity)
-    if fuzzy_ratio < 75:
+    if fuzzy_ratio < entity_alias_ratio:
         return 0
     else:
         return 1
@@ -277,14 +262,7 @@ def cleanAlias(alias):
             clean_alias += char
     return clean_alias
 
+# input = {('пушкин', 'LOC', 'пушкин')}
+# print(getNamedEntitiesLinks(input))
 
-#set = {('пушкина', 'PER','пушкин')}
-#set = {('соединить штат америка', 'LOC','соединенные штаты америки'), ('россия', 'LOC','россия'), ('лондон', 'LOC','лондон'), ('петербург', 'LOC','петербург')}
-#rslt = [['соединить штат америка', 'LOC', None, None], ['россия', 'LOC', 'Q159', 'https://www.wikidata.org/wiki/Q159'], ['лондон', 'LOC', 'Q84', 'https://www.wikidata.org/wiki/Q84'], ['петербург', 'LOC', 'Q656', 'https://www.wikidata.org/wiki/Q656']]
-
-# for list in rslt:
-#     print(list[2])
-
-
-
-
+# print(getNamedEntitiesLinks({("василия пушкина","PER","василий пушкин")}))
