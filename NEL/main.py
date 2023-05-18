@@ -6,7 +6,7 @@ from db import upsertMethodResult
 from configs.search_config import tags_list
 
 
-def process(path_to_file, tag_list):
+def linkNamedEntities(path_to_file, tag_list):
     ner_model = ner_model_name
     sentence_list = getSentenceList(path_to_file)
     named_entities_set = extractNamedEntities(sentence_list, ner_model, tag_list)
@@ -15,11 +15,11 @@ def process(path_to_file, tag_list):
     return named_entities_full_info_list
 
 
-file_path = "../files/2.txt"
-result = process(file_path, tags_list)
-# print(result)
+def printResult(method_result):
+    for entity in method_result:
+        print(entity)
 
-# for i in result:
-#     print(i)
-# result_set = process(file,tags_list)
-# print(len(result_set))
+
+file_path = "../files/prob1.txt"
+result = linkNamedEntities(file_path, tags_list)
+printResult(result)

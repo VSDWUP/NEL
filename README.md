@@ -13,6 +13,12 @@ Docs: http://docs.deeppavlov.ai/en/master/
 ```no-highlight
 python -m deeppavlov install <model_name>  
 ```
+Before the first run of deeppavlov NER model you need to build in .py file:
+```no-highlight
+ner_model = build_model('<ner_model>', download=True, install=True)
+```
+After completing the build process, download ad install arguments needs to be deleted.
+
 More information about models: https://docs.deeppavlov.ai/en/master/features/models/NER.html
 
 ### 2. Razdel
@@ -22,12 +28,12 @@ pip install razdel
 ```
 Docs: https://github.com/natasha/razdel
 
-### 3. pymorphy2
+### 3. pymystem3
 Morphological analyzer for word lemmatization
 ```no-highlight
 pip install pymorphy2
 ```
-Docs: https://pymorphy2.readthedocs.io/en/stable/ 
+Docs: https://pypi.org/project/pymystem3/
 
 ### 4. psycopg2
 The most popular PostgreSQL database adapter

@@ -11,21 +11,13 @@ def getNamedEntitiesLinks(named_entities_list):
         lemmatized_entity = entity_element[2]
         entity_tag = entity_element[1]
         entity_initial_info_list = (lemmatized_entity, entity_tag)
-        entity_search_result = (None, None)
 
-        if entity_tag == "PER":
-            entity_search_result = getPEREntitySearchResult(lemmatized_entity)
-        elif entity_tag == "LOC":
-            entity_search_result = getLOCEntitySearchResult(lemmatized_entity)
+        entity_search_result = getEntitySearchResult(entity_tag, lemmatized_entity)
 
         if entity_search_result == (None, None):
             raw_entity = entity_element[0]
             entity_initial_info_list = (raw_entity, entity_tag)
-
-            if entity_tag == "PER":
-                entity_search_result = getPEREntitySearchResult(raw_entity)
-            elif entity_tag == "LOC":
-                entity_search_result = getLOCEntitySearchResult(raw_entity)
+            entity_search_result = getEntitySearchResult(entity_tag, raw_entity)
 
         entity_full_info_list = entity_initial_info_list + entity_search_result
         entities_info_list.add(entity_full_info_list)
@@ -33,8 +25,16 @@ def getNamedEntitiesLinks(named_entities_list):
     return entities_info_list
 
 
-def getPEREntitySearchResult(query):
-    none_result = (None, None)
+def getEntitySearchResult(entity_tag, entity):
+    entity_search_result = (None, None)
+    if entity_tag == "PER":
+        entity_search_result = getPEREntitySearchResult(entity, entity_search_result)
+    elif entity_tag == "LOC":
+        entity_search_result = getLOCEntitySearchResult(entity, entity_search_result)
+    return entity_search_result
+
+
+def getPEREntitySearchResult(query, initial_entity_search_result):
     search_entities_list = getEntitiesIdsFromSearchResult(query)
 
     if len(search_entities_list) > 0:
@@ -51,14 +51,13 @@ def getPEREntitySearchResult(query):
                 result_entity = tuple(filtered_entities_dict.keys())[0]
                 return result_entity, createWikiDataLink(result_entity)
         else:
-            return none_result
+            return initial_entity_search_result
 
     else:
-        return none_result
+        return initial_entity_search_result
 
 
-def getLOCEntitySearchResult(query):
-    none_result = (None, None)
+def getLOCEntitySearchResult(query, initial_entity_search_result):
     search_entities_list = getEntitiesIdsFromSearchResult(query)
 
     if len(search_entities_list) > 0:
@@ -75,9 +74,9 @@ def getLOCEntitySearchResult(query):
                 result_entity = tuple(filtered_entities_dict.keys())[0]
                 return result_entity, createWikiDataLink(result_entity)
         else:
-            return none_result
+            return initial_entity_search_result
     else:
-        return none_result
+        return initial_entity_search_result
 
 
 def getEntitiesIdsFromSearchResult(search_query):
@@ -265,8 +264,3 @@ def cleanAlias(alias):
         if char.isalpha() or char.isspace() or char in string.punctuation:
             clean_alias += char
     return clean_alias
-
-# input = {('пушкин', 'LOC', 'пушкин')}
-# print(getNamedEntitiesLinks(input))
-
-# print(getNamedEntitiesLinks({("василия пушкина","PER","василий пушкин")}))

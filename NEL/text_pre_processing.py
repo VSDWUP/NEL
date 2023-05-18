@@ -19,5 +19,3 @@ def getSentenceList(input_file):
     full_text = readFile(input_file)
     sentence_list = segmentText(full_text)
     return sentence_list
-
-

@@ -1,8 +1,9 @@
-import pymorphy2
 from deeppavlov import build_model
 import logging
+from pymystem3 import Mystem
 
 logging.getLogger("transformers.modeling_utils").setLevel(logging.ERROR)
+my_stem = Mystem()
 
 
 def extractNamedEntities(sentence_list, ner_model_name, tags_list):
@@ -67,19 +68,13 @@ def findSentenceNamedEntities(token_list, tag_list, start_mark_list, inside_mark
 
 
 def lemmatizeEntity(named_entity):
-    morph = pymorphy2.MorphAnalyzer()
-    word_list = named_entity.split()
-    lemmatized_entity = ""
-    for word in word_list:
-        word_lemma = morph.parse(word)[0].normal_form
-        lemmatized_entity = lemmatized_entity + word_lemma + " "
-    lemmatized_entity.strip()
-
-    return lemmatized_entity
+    lemmas = my_stem.lemmatize(named_entity)
+    return "".join(lemmas).strip()
 
 
 def entityCorrection(named_entitity):
     return named_entitity.replace(" .", ".").lower()
+
 
 def clearNERTag(tag):
     return tag.split("-")[1]

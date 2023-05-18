@@ -41,7 +41,7 @@ class TextEntityLink(Base):
 def upsertMethodResult(entity_set, file_path):
     text_id = upsertTextEntity(file_path)
     entity_id_list = upsertNamedEntities(entity_set)
-    upsertEntityTextLinks(entity_id_list, text_id)
+    insertEntityTextLinks(entity_id_list, text_id)
 
 
 def upsertTextEntity(file_path):
@@ -96,7 +96,7 @@ def upsertEntity(entity, tag, concept_id, link):
     db.close()
 
 
-def upsertEntityTextLinks(entity_id_list, file_id):
+def insertEntityTextLinks(entity_id_list, file_id):
     with Session(autoflush=False, bind=engine) as db:
         for entity_id in entity_id_list:
             db.add(TextEntityLink(named_entity_id=entity_id, text_id=file_id))
