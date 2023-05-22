@@ -87,8 +87,7 @@ def getEntitiesIdsFromSearchResult(search_query):
 
 
 def getEntitiesListFromWbse(search_query):
-    search_url = "https://www.wikidata.org/w/api.php?action=wbsearchentities&search={}&format=json&language=ru".format(
-        search_query)
+    search_url = "https://www.wikidata.org/w/api.php?action=wbsearchentities&search={}&format=json&language=ru&limit=10".format(search_query)
     response = requests.get(search_url)
     data = response.json()
     result = data['search']
@@ -202,7 +201,7 @@ def setWeightsForPEREntities(entities_aliases_dict, query):
 
 def calculateRatio(query, entity):
     fuzzy_ratio = fuzz.token_set_ratio(query, entity)
-    if fuzzy_ratio < entity_alias_ratio:
+    if fuzzy_ratio <= entity_alias_ratio:
         return 0
     else:
         return 1

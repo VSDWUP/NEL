@@ -1,7 +1,7 @@
 from text_pre_processing import getSentenceList
-from named_entity_recognition import extractNamedEntities
+from named_entities_recognition import extractNamedEntities
 from configs.ner_model_config import ner_model_name
-from search import getNamedEntitiesLinks
+from search_concepts import getNamedEntitiesLinks
 from db import upsertMethodResult
 from configs.search_config import tags_list
 
@@ -20,6 +20,6 @@ def printResult(method_result):
         print(entity)
 
 
-file_path = "../files/prob1.txt"
+file_path = "../files/1.txt"
 result = linkNamedEntities(file_path, tags_list)
 printResult(result)

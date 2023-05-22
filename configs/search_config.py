@@ -10,4 +10,4 @@ loc_entities_id_weight_dict = {"Q6256": 7, "Q7930989": 7, "Q515": 7, "Q15253706"
 # Per configuration
 per_filter_labels = ["human", "character"]
 tags_list = ['PER', 'LOC']
-entity_alias_ratio = 85
+entity_alias_ratio = 75
