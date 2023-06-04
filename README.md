@@ -31,7 +31,7 @@ Docs: https://github.com/natasha/razdel
 ### 3. pymystem3
 Morphological analyzer for word lemmatization
 ```no-highlight
-pip install pymorphy2
+pip install pymystem3
 ```
 Docs: https://pypi.org/project/pymystem3/
 

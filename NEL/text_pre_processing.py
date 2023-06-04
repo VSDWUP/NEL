@@ -1,10 +1,14 @@
 from razdel import sentenize
+import os
 
 
 def readFile(input_file):
-    with open(input_file, "r", encoding="utf-8") as file:
-        content = file.read()
-    return content
+    if os.path.getsize(input_file) != 0:
+        with open(input_file, "r", encoding="utf-8") as file:
+            content = file.read()
+        return content
+    else:
+        raise OSError("Empty file")
 
 
 def segmentText(full_text):
@@ -16,6 +20,9 @@ def segmentText(full_text):
 
 
 def getSentenceList(input_file):
-    full_text = readFile(input_file)
-    sentence_list = segmentText(full_text)
-    return sentence_list
+    try:
+        full_text = readFile(input_file)
+        sentence_list = segmentText(full_text)
+        return sentence_list
+    except OSError:
+        print("Empty file")

@@ -4,6 +4,7 @@ from configs.ner_model_config import ner_model_name
 from search_concepts import getNamedEntitiesLinks
 from db import upsertMethodResult
 from configs.search_config import tags_list
+import time
 
 
 def linkNamedEntities(path_to_file, tag_list):
@@ -20,6 +21,13 @@ def printResult(method_result):
         print(entity)
 
 
-file_path = "../files/1.txt"
-result = linkNamedEntities(file_path, tags_list)
-printResult(result)
+def runWithTimeCalculation(path, tags):
+    start = time.time()
+    file_path = path
+    result = linkNamedEntities(file_path, tags)
+    printResult(result)
+    end = time.time() - start
+    print(end)
+
+
+runWithTimeCalculation("../files/target_sample000.txt", tags_list)

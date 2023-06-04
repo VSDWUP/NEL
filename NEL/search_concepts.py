@@ -1,28 +1,37 @@
+import time
+
 import requests
 from thefuzz import fuzz
 from configs.search_config import loc_entities_id_weight_dict, per_filter_labels, entity_alias_ratio
 import string
+from concurrent.futures import ThreadPoolExecutor
 
 
-def getNamedEntitiesLinks(named_entities_list):
-    entities_info_list = set()
-    for entity_element in named_entities_list:
+def getNamedEntitiesLinks(named_entities_set):
+    named_entities_list = list(named_entities_set)
+    pool = ThreadPoolExecutor()
+    result_list = pool.map(getNamedEntityLink, named_entities_list)
+    result_set = set()
+    for entity_info in result_list:
+        result_set.add(entity_info)
+    pool.shutdown()
+    return result_set
 
-        lemmatized_entity = entity_element[2]
-        entity_tag = entity_element[1]
-        entity_initial_info_list = (lemmatized_entity, entity_tag)
 
-        entity_search_result = getEntitySearchResult(entity_tag, lemmatized_entity)
+def getNamedEntityLink(named_entity_info):
+    lemmatized_entity = named_entity_info[2]
+    entity_tag = named_entity_info[1]
+    entity_initial_info_list = (lemmatized_entity, entity_tag)
 
-        if entity_search_result == (None, None):
-            raw_entity = entity_element[0]
-            entity_initial_info_list = (raw_entity, entity_tag)
-            entity_search_result = getEntitySearchResult(entity_tag, raw_entity)
+    entity_search_result = getEntitySearchResult(entity_tag, lemmatized_entity)
 
-        entity_full_info_list = entity_initial_info_list + entity_search_result
-        entities_info_list.add(entity_full_info_list)
+    if entity_search_result == (None, None):
+        raw_entity = named_entity_info[0]
+        entity_initial_info_list = (raw_entity, entity_tag)
+        entity_search_result = getEntitySearchResult(entity_tag, raw_entity)
 
-    return entities_info_list
+    entity_full_info_list = entity_initial_info_list + entity_search_result
+    return entity_full_info_list
 
 
 def getEntitySearchResult(entity_tag, entity):
@@ -87,7 +96,8 @@ def getEntitiesIdsFromSearchResult(search_query):
 
 
 def getEntitiesListFromWbse(search_query):
-    search_url = "https://www.wikidata.org/w/api.php?action=wbsearchentities&search={}&format=json&language=ru&limit=10".format(search_query)
+    search_url = "https://www.wikidata.org/w/api.php?action=wbsearchentities&search={}&format=json&language=ru&limit=10".format(
+        search_query)
     response = requests.get(search_url)
     data = response.json()
     result = data['search']
@@ -220,10 +230,19 @@ def createWikiDataLink(entity_id):
         return None
 
 
-def getEntityClaim(entity_id):
+def getEntityInfo(entity_id):
     search_url = "https://www.wikidata.org/wiki/Special:EntityData/{}.json".format(entity_id)
     response = requests.get(search_url)
-    data = response.json()
+    return response
+
+
+def getEntityClaim(entity_id):
+    try:
+        entity_info = getEntityInfo(entity_id)
+    except requests.exceptions.SSLError:
+        time.sleep(1)
+        entity_info = getEntityInfo(entity_id)
+    data = entity_info.json()
     claims = data['entities'][entity_id]['claims']
     return claims
 
