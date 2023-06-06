@@ -30,4 +30,4 @@ def runWithTimeCalculation(path, tags):
     print(end)
 
 
-runWithTimeCalculation("../files/target_sample000.txt", tags_list)
+runWithTimeCalculation("../files/target_sample004.txt", tags_list)

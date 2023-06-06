@@ -232,16 +232,16 @@ def createWikiDataLink(entity_id):
 
 def getEntityInfo(entity_id):
     search_url = "https://www.wikidata.org/wiki/Special:EntityData/{}.json".format(entity_id)
-    response = requests.get(search_url)
+    try:
+        response = requests.get(search_url)
+    except requests.exceptions.SSLError:
+        time.sleep(1)
+        response = requests.get(search_url)
     return response
 
 
 def getEntityClaim(entity_id):
-    try:
-        entity_info = getEntityInfo(entity_id)
-    except requests.exceptions.SSLError:
-        time.sleep(1)
-        entity_info = getEntityInfo(entity_id)
+    entity_info = getEntityInfo(entity_id)
     data = entity_info.json()
     claims = data['entities'][entity_id]['claims']
     return claims
